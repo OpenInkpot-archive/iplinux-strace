@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: defs.h,v 1.82 2008/07/22 00:30:26 roland Exp $
+ *	$Id: defs.h,v 1.83 2008/08/01 01:06:31 roland Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,6 +79,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
+
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
 
 #ifdef STDC_HEADERS
 #include <stddef.h>
