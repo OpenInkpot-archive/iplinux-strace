@@ -1,0 +1,13 @@
+Index: strace/Makefile.am
+===================================================================
+--- strace.orig/Makefile.am	2008-09-25 11:07:37.000000000 +0700
++++ strace/Makefile.am	2008-09-25 11:07:45.000000000 +0700
+@@ -10,7 +10,7 @@
+ ARCH		= @arch@
+ 
+ AM_CFLAGS = $(WARNFLAGS)
+-INCLUDES = -I$(OS)/$(ARCH) -I$(srcdir)/$(OS)/$(ARCH) -I$(OS) -I$(srcdir)/$(OS)
++INCLUDES = -I$(OS)/$(ARCH) -I$(srcdir)/$(OS)/$(arch) -I$(OS) -I$(srcdir)/$(OS)
+ 
+ strace_SOURCES = strace.c syscall.c count.c util.c desc.c file.c ipc.c \
+ 		 io.c ioctl.c mem.c net.c process.c bjm.c quota.c \
