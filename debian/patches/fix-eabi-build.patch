@@ -1,0 +1,17 @@
+Index: strace/linux/arm/syscallent.h
+===================================================================
+--- strace.orig/linux/arm/syscallent.h	2009-03-14 02:15:44.000000000 +0600
++++ strace/linux/arm/syscallent.h	2009-03-14 02:15:50.000000000 +0600
+@@ -431,6 +431,7 @@
+ 	{ 5,	0,	printargs,		"SYS_398"	}, /* 398 */
+ 	{ 5,	0,	printargs,		"SYS_399"	}, /* 399 */
+ 
++#ifndef __ARM_EABI__
+ #if SYS_socket_subcall != 400
+  #error fix me
+ #endif
+@@ -481,3 +482,4 @@
+ 	{ 4,	TI,	sys_shmdt,		"shmdt"		}, /* 440 */
+ 	{ 4,	TI,	sys_shmget,		"shmget"	}, /* 441 */
+ 	{ 4,	TI,	sys_shmctl,		"shmctl"	}, /* 442 */
++#endif

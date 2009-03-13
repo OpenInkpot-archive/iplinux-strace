@@ -1,1 +1,4 @@
 fix-arch-in-makefile.patch
+fix-eabi-build.patch
+fix-arm-syscall-list.patch
+fix-arm-warnings.patch
