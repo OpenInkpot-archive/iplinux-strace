@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: syscallent.h,v 1.34 2008/07/22 00:22:05 roland Exp $
+ *	$Id: syscallent.h,v 1.35 2008/08/25 03:09:16 roland Exp $
  */
 
 	{ 0,	0,	sys_restart_syscall,	"restart_syscall"	}, /* 0 */
@@ -339,7 +339,7 @@
 	{ 1,	TD,	sys_eventfd,		"eventfd"		}, /* 307 */
 	{ 5,	0,	printargs,		"SYS_308"		}, /* 308 */
 	{ 5,	0,	printargs,		"SYS_309"		}, /* 309 */
-	{ 5,	0,	printargs,		"SYS_310"		}, /* 310 */
+	{ 3,    0,      sys_subpage_prot,       "subpage_prot"          }, /* 310 */
 	{ 5,	0,	printargs,		"SYS_311"		}, /* 311 */
 	{ 5,	0,	printargs,		"SYS_312"		}, /* 312 */
 	{ 5,	0,	printargs,		"SYS_313"		}, /* 313 */

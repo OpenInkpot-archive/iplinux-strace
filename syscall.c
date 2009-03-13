@@ -30,7 +30,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: syscall.c,v 1.94 2008/05/27 23:18:29 roland Exp $
+ *	$Id: syscall.c,v 1.96 2008/08/25 03:16:26 roland Exp $
  */
 
 #include "defs.h"
@@ -1963,20 +1963,21 @@ struct tcb *tcp;
 #elif defined (IA64)
 	{
 		if (!ia32) {
-			unsigned long *out0, *rbs_end, cfm, sof, sol, i;
+			unsigned long *out0, cfm, sof, sol, i;
+			long rbs_end;
 			/* be backwards compatible with kernel < 2.4.4... */
 #			ifndef PT_RBS_END
 #			  define PT_RBS_END	PT_AR_BSP
 #			endif
 
-			if (upeek(pid, PT_RBS_END, (long *) &rbs_end) < 0)
+			if (upeek(pid, PT_RBS_END, &rbs_end) < 0)
 				return -1;
 			if (upeek(pid, PT_CFM, (long *) &cfm) < 0)
 				return -1;
 
 			sof = (cfm >> 0) & 0x7f;
 			sol = (cfm >> 7) & 0x7f;
-			out0 = ia64_rse_skip_regs(rbs_end, -sof + sol);
+			out0 = ia64_rse_skip_regs((unsigned long *) rbs_end, -sof + sol);
 
 			if (tcp->scno >= 0 && tcp->scno < nsyscalls
 			    && sysent[tcp->scno].nargs != -1)
@@ -2429,18 +2430,18 @@ trace_syscall(struct tcb *tcp)
 		return res;
 
 	switch (known_scno(tcp)) {
-#ifdef LINUX
-#if !defined (ALPHA) && !defined(MIPS) && !defined(HPPA)
+#ifdef SYS_socket_subcall
 	case SYS_socketcall:
 		decode_subcall(tcp, SYS_socket_subcall,
 			SYS_socket_nsubcalls, deref_style);
 		break;
+#endif
+#ifdef SYS_ipc_subcall
 	case SYS_ipc:
 		decode_subcall(tcp, SYS_ipc_subcall,
 			SYS_ipc_nsubcalls, shift_style);
 		break;
-#endif /* !(ALPHA || MIPS || HPPA) */
-#endif /* LINUX */
+#endif
 #ifdef SVR4
 #ifdef SYS_pgrpsys_subcall
 	case SYS_pgrpsys:

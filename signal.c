@@ -30,7 +30,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: signal.c,v 1.66 2008/07/18 01:02:41 roland Exp $
+ *	$Id: signal.c,v 1.68 2008/08/20 01:59:40 roland Exp $
  */
 
 #include "defs.h"
@@ -1120,23 +1120,20 @@ struct tcb *tcp;
 	else if (umove(tcp, addr, &sa) < 0)
 		tprintf("{...}");
 	else {
-		switch ((long) sa.SA_HANDLER) {
-		case (long) SIG_ERR:
-			tprintf("{SIG_ERR}");
-			break;
-		case (long) SIG_DFL:
-			tprintf("{SIG_DFL}");
-			break;
-		case (long) SIG_IGN:
+		if (sa.SA_HANDLER == SIG_ERR)
+			tprintf("{SIG_ERR, ");
+		else if (sa.SA_HANDLER == SIG_DFL)
+			tprintf("{SIG_DFL, ");
+		else if (sa.SA_HANDLER == SIG_DFL) {
 #ifndef USE_PROCFS
 			if (tcp->u_arg[0] == SIGTRAP) {
 				tcp->flags |= TCB_SIGTRAPPED;
 				kill(tcp->pid, SIGSTOP);
 			}
 #endif /* !USE_PROCFS */
-			tprintf("{SIG_IGN}");
-			break;
-		default:
+			tprintf("{SIG_IGN, ");
+		}
+		else {
 #ifndef USE_PROCFS
 			if (tcp->u_arg[0] == SIGTRAP) {
 				tcp->flags |= TCB_SIGTRAPPED;
@@ -1176,13 +1173,13 @@ struct tcb *tcp;
 		printsignal(tcp->u_arg[0]);
 		tprintf(", ");
 		switch (tcp->u_arg[1]) {
-		case (int) SIG_ERR:
+		case (long) SIG_ERR:
 			tprintf("SIG_ERR");
 			break;
-		case (int) SIG_DFL:
+		case (long) SIG_DFL:
 			tprintf("SIG_DFL");
 			break;
-		case (int) SIG_IGN:
+		case (long) SIG_IGN:
 #ifndef USE_PROCFS
 			if (tcp->u_arg[0] == SIGTRAP) {
 				tcp->flags |= TCB_SIGTRAPPED;
@@ -1204,11 +1201,11 @@ struct tcb *tcp;
 	}
 	else {
 		switch (tcp->u_rval) {
-		    case (int) SIG_ERR:
+		    case (long) SIG_ERR:
 			tcp->auxstr = "SIG_ERR"; break;
-		    case (int) SIG_DFL:
+		    case (long) SIG_DFL:
 			tcp->auxstr = "SIG_DFL"; break;
-		    case (int) SIG_IGN:
+		    case (long) SIG_IGN:
 			tcp->auxstr = "SIG_IGN"; break;
 		    default:
 			tcp->auxstr = NULL;
@@ -1865,7 +1862,7 @@ struct new_sigaction
 };
 
 
-	int
+int
 sys_rt_sigaction(tcp)
 	struct tcb *tcp;
 {
@@ -1886,38 +1883,33 @@ sys_rt_sigaction(tcp)
 	else if (umove(tcp, addr, &sa) < 0)
 		tprintf("{...}");
 	else {
-		switch ((long) sa.__sigaction_handler.__sa_handler) {
-			case (long) SIG_ERR:
-				tprintf("{SIG_ERR}");
-				break;
-			case (long) SIG_DFL:
-				tprintf("{SIG_DFL}");
-				break;
-			case (long) SIG_IGN:
-				tprintf("{SIG_IGN}");
-				break;
-			default:
-				tprintf("{%#lx, ",
-						(long) sa.__sigaction_handler.__sa_handler);
-				sigemptyset(&sigset);
+		if (sa.__sigaction_handler.__sa_handler == SIG_ERR)
+			tprintf("{SIG_ERR, ");
+		else if (sa.__sigaction_handler.__sa_handler == SIG_DFL)
+			tprintf("{SIG_DFL, ");
+		else if (sa.__sigaction_handler.__sa_handler == SIG_DFL)
+			tprintf("{SIG_IGN, ");
+		else
+			tprintf("{%#lx, ",
+				(long) sa.__sigaction_handler.__sa_handler);
+		sigemptyset(&sigset);
 #ifdef LINUXSPARC
-				if (tcp->u_arg[4] <= sizeof(sigset))
-					memcpy(&sigset, &sa.sa_mask, tcp->u_arg[4]);
+		if (tcp->u_arg[4] <= sizeof(sigset))
+			memcpy(&sigset, &sa.sa_mask, tcp->u_arg[4]);
 #else
-				if (tcp->u_arg[3] <= sizeof(sigset))
-					memcpy(&sigset, &sa.sa_mask, tcp->u_arg[3]);
+		if (tcp->u_arg[3] <= sizeof(sigset))
+			memcpy(&sigset, &sa.sa_mask, tcp->u_arg[3]);
 #endif
-				else
-					memcpy(&sigset, &sa.sa_mask, sizeof(sigset));
-				printsigmask(&sigset, 1);
-				tprintf(", ");
-				printflags(sigact_flags, sa.sa_flags, "SA_???");
+		else
+			memcpy(&sigset, &sa.sa_mask, sizeof(sigset));
+		printsigmask(&sigset, 1);
+		tprintf(", ");
+		printflags(sigact_flags, sa.sa_flags, "SA_???");
 #ifdef SA_RESTORER
-				if (sa.sa_flags & SA_RESTORER)
-					tprintf(", %p", sa.sa_restorer);
+		if (sa.sa_flags & SA_RESTORER)
+			tprintf(", %p", sa.sa_restorer);
 #endif
-				tprintf("}");
-		}
+		tprintf("}");
 	}
 	if (entering(tcp))
 		tprintf(", ");

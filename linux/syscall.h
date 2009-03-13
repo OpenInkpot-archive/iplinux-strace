@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: syscall.h,v 1.57 2008/05/20 04:56:22 roland Exp $
+ *	$Id: syscall.h,v 1.59 2008/08/25 03:15:43 roland Exp $
  */
 
 #include "dummy.h"
@@ -179,7 +179,8 @@ int sys_osf_utimes();
 # endif
 #endif
 
-#if !defined(ALPHA) && !defined(MIPS) && !defined(HPPA)
+#if !defined(ALPHA) && !defined(MIPS) && !defined(HPPA) && \
+	!defined(__ARM_EABI__)
 # ifdef	IA64
 /*
  *  IA64 syscall numbers (the only ones available from standard header
@@ -234,7 +235,8 @@ int sys_semget(), sys_semctl(), sys_semop();
 int sys_msgsnd(), sys_msgrcv(), sys_msgget(), sys_msgctl();
 int sys_shmat(), sys_shmdt(), sys_shmget(), sys_shmctl();
 
-#if !defined(ALPHA) && !defined(MIPS) && !defined(SPARC) && !defined(HPPA)
+#if !defined(ALPHA) && !defined(MIPS) && !defined(SPARC) && !defined(HPPA) && \
+	!defined(__ARM_EABI__)
 # ifdef	IA64
    /*
     * IA64 syscall numbers (the only ones available from standard
@@ -320,3 +322,7 @@ int sys_cacheflush();
 #endif
 
 int sys_pread64(), sys_pwrite64();
+
+#ifdef POWERPC
+int sys_subpage_prot();
+#endif

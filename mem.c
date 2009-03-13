@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: mem.c,v 1.42 2008/05/20 01:11:56 roland Exp $
+ *	$Id: mem.c,v 1.45 2008/08/25 03:09:16 roland Exp $
  */
 
 #include "defs.h"
@@ -95,6 +95,9 @@ static const struct xlat mmap_prot[] = {
 #endif
 #ifdef PROT_GROWSUP
 	{ PROT_GROWSUP, "PROT_GROWSUP"	},
+#endif
+#ifdef PROT_SAO
+	{ PROT_SAO,	"PROT_SAO"	},
 #endif
 	{ 0,		NULL		},
 };
@@ -384,11 +387,11 @@ struct tcb *tcp;
 	return RVAL_HEX;
 }
 
-static const struct xlat madvise_flags[] = {
+static const struct xlat madvise_cmds[] = {
 #ifdef MADV_NORMAL
 	{ MADV_NORMAL,		"MADV_NORMAL" },
 #endif
-#ifdef MADZV_RANDOM
+#ifdef MADV_RANDOM
 	{ MADV_RANDOM,		"MADV_RANDOM" },
 #endif
 #ifdef MADV_SEQUENTIAL
@@ -397,7 +400,7 @@ static const struct xlat madvise_flags[] = {
 #ifdef MADV_WILLNEED
 	{ MADV_WILLNEED,	"MADV_WILLNEED" },
 #endif
-#ifdef MADV_DONTNED
+#ifdef MADV_DONTNEED
 	{ MADV_DONTNEED,	"MADV_DONTNEED" },
 #endif
 	{ 0,			NULL },
@@ -410,7 +413,7 @@ struct tcb *tcp;
 {
 	if (entering(tcp)) {
 		tprintf("%#lx, %lu, ", tcp->u_arg[0], tcp->u_arg[1]);
-		printflags(madvise_flags, tcp->u_arg[2], "MADV_???");
+		printxval(madvise_cmds, tcp->u_arg[2], "MADV_???");
 	}
 	return 0;
 }
@@ -880,6 +883,56 @@ struct tcb *tcp;
 		}
 		printflags(move_pages_flags, tcp->u_arg[5], "MPOL_???");
 	}
+	return 0;
+}
+#endif
+
+#if defined(LINUX) && defined(POWERPC)
+int
+sys_subpage_prot(tcp)
+struct tcb *tcp;
+{
+	if (entering(tcp)) {
+		unsigned long cur, end, abbrev_end, entries;
+		unsigned int entry;
+
+		tprintf("%#lx, %#lx, ", tcp->u_arg[0], tcp->u_arg[1]);
+		entries = tcp->u_arg[1] >> 16;
+		if (!entries || !tcp->u_arg[2]) {
+			tprintf("{}");
+			return 0;
+		}
+		cur = tcp->u_arg[2];
+		end = cur + (sizeof(int) * entries);
+		if (!verbose(tcp) || end < tcp->u_arg[2]) {
+			tprintf("%#lx", tcp->u_arg[2]);
+			return 0;
+		}
+		if (abbrev(tcp)) {
+			abbrev_end = cur + (sizeof(int) * max_strlen);
+			if (abbrev_end > end)
+				abbrev_end = end;
+		}
+		else
+			abbrev_end = end;
+		tprintf("{");
+		for (; cur < end; cur += sizeof(int)) {
+			if (cur > tcp->u_arg[2])
+				tprintf(", ");
+			if (cur >= abbrev_end) {
+				tprintf("...");
+				break;
+			}
+			if (umove(tcp, cur, &entry) < 0) {
+				tprintf("??? [%#lx]", cur);
+				break;
+			}
+			else
+				tprintf("%#08x", entry);
+		}
+		tprintf("}");
+	}
+
 	return 0;
 }
 #endif

@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to create configure.  Use autoreconf.
 AC_PREREQ(2.57)
-AC_INIT([strace],[4.5.17])
+AC_INIT([strace],[4.5.18])
 AC_CONFIG_SRCDIR([strace.c])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([foreign check-news dist-bzip2])
@@ -158,6 +158,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
 AC_C_CONST
 AC_HEADER_STDC
+AC_HEADER_STDBOOL
 AC_HEADER_DIRENT
 AC_HEADER_STAT
 AC_CHECK_MEMBERS([struct stat.st_blksize,
