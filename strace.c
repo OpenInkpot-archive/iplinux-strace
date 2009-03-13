@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: strace.c,v 1.86 2008/07/18 00:25:10 roland Exp $
+ *	$Id: strace.c,v 1.88 2008/08/06 21:38:52 kratochvil Exp $
  */
 
 #include "defs.h"
@@ -622,6 +622,7 @@ main(int argc, char *argv[])
 	extern char *optarg;
 	struct tcb *tcp;
 	int c, pid = 0;
+	int optF = 0;
 	struct sigaction sa;
 
 	static char buf[BUFSIZ];
@@ -660,7 +661,8 @@ main(int argc, char *argv[])
 			debug++;
 			break;
 		case 'F':
-			/* Obsoleted, acts as `-f'.  */
+			optF = 1;
+			break;
 		case 'f':
 			followfork++;
 			break;
@@ -756,6 +758,9 @@ main(int argc, char *argv[])
 
 	if ((optind == argc) == !pflag_seen)
 		usage(stderr, 1);
+
+	if (!followfork)
+		followfork = optF;
 
 	if (followfork > 1 && cflag) {
 		fprintf(stderr,
@@ -2416,11 +2421,12 @@ Process %d attached (waiting for parent)\n",
 			}
 			if (!cflag
 			    && (qual_flags[WSTOPSIG(status)] & QUAL_SIGNAL)) {
-				unsigned long addr = 0, pc = 0;
+				unsigned long addr = 0;
+				long pc = 0;
 #if defined(PT_CR_IPSR) && defined(PT_CR_IIP) && defined(PT_GETSIGINFO)
 #				define PSR_RI	41
 				struct siginfo si;
-				unsigned long psr;
+				long psr;
 
 				upeek(pid, PT_CR_IPSR, &psr);
 				upeek(pid, PT_CR_IIP, &pc);

@@ -30,7 +30,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *	$Id: util.c,v 1.77 2008/07/18 01:19:36 roland Exp $
+ *	$Id: util.c,v 1.79 2008/08/06 21:43:35 kratochvil Exp $
  */
 
 #include "defs.h"
@@ -1284,6 +1284,9 @@ struct tcb *tcp;
 #ifndef CLONE_VFORK
 # define CLONE_VFORK     0x00004000
 #endif
+#ifndef CLONE_VM
+# define CLONE_VM        0x00000100
+#endif
 #ifndef CLONE_STOPPED
 # define CLONE_STOPPED   0x02000000
 #endif
@@ -1300,21 +1303,25 @@ typedef unsigned long *arg_setup_state;
 static int
 arg_setup(struct tcb *tcp, arg_setup_state *state)
 {
-	unsigned long *bsp, cfm, sof, sol;
+	unsigned long cfm, sof, sol;
+	long bsp;
 
-	if (ia32)
+	if (ia32) {
+		/* Satisfy a false GCC warning.  */
+		*state = NULL;
 		return 0;
+	}
 
-	if (upeek(tcp->pid, PT_AR_BSP, (long *) &bsp) < 0)
+	if (upeek(tcp->pid, PT_AR_BSP, &bsp) < 0)
 		return -1;
 	if (upeek(tcp->pid, PT_CFM, (long *) &cfm) < 0)
 		return -1;
 
 	sof = (cfm >> 0) & 0x7f;
 	sol = (cfm >> 7) & 0x7f;
-	bsp = ia64_rse_skip_regs(bsp, -sof + sol);
+	bsp = (long) ia64_rse_skip_regs((unsigned long *) bsp, -sof + sol);
 
-	*state = bsp;
+	*state = (unsigned long *) bsp;
 	return 0;
 }
 
@@ -1533,15 +1540,19 @@ struct tcb *tcp;
 #ifdef SYS_clone2
 	case SYS_clone2:
 #endif
-		/* ia64 calls directly `clone (CLONE_VFORK)' contrary to
-		   x86 SYS_vfork above.  Even on x86 we turn the vfork
-		   semantics into plain fork - each application must not
-		   depend on the vfork specifics according to POSIX.  We
-		   would hang waiting for the parent resume otherwise.  */
+		/* ia64 calls directly `clone (CLONE_VFORK | CLONE_VM)'
+		   contrary to x86 SYS_vfork above.  Even on x86 we turn the
+		   vfork semantics into plain fork - each application must not
+		   depend on the vfork specifics according to POSIX.  We would
+		   hang waiting for the parent resume otherwise.  We need to
+		   clear also CLONE_VM but only in the CLONE_VFORK case as
+		   otherwise we would break pthread_create.  */
+
 		if ((arg_setup (tcp, &state) < 0
 		    || set_arg0 (tcp, &state,
 				 (tcp->u_arg[arg0_index] | CLONE_PTRACE)
-				 & ~CLONE_VFORK) < 0
+				 & ~(tcp->u_arg[arg0_index] & CLONE_VFORK
+				     ? CLONE_VFORK | CLONE_VM : 0)) < 0
 		    || arg_finish_change (tcp, &state) < 0))
 		    return -1;
 		tcp->flags |= TCB_BPTSET;
