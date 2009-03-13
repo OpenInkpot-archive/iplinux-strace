@@ -1,6 +1,6 @@
 Source: strace
 Maintainer: Mikhail Gusarov <dottedmag@dottedmag.net>
-Section: debug
+Section: core
 Priority: optional
 Build-Depends: libc6-dev, debhelper (>= 7), automake, quilt
 Standards-Version: 3.8.0
