@@ -1,3 +1,9 @@
+strace (4.5.18-2+b1) asimov; urgency=low
+
+  * Rebuild with new toolchain.
+
+ -- Mikhail Gusarov <dottedmag@dottedmag.net>  Fri, 03 Apr 2009 19:04:42 +0700
+
 strace (4.5.18-2) asimov; urgency=low
 
   * Updated section: debug is host/cross only.
